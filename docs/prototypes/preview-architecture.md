@@ -2,7 +2,7 @@
 
 > 工单：[网页预览架构](https://github.com/CoolTea001/cool-teach-mcp/issues/17)
 > 输入决议：[技术栈与仓库结构](#12)（packages/preview = Nuxt + Nuxt UI v4 + Tailwind v4，cool-design）、[跨客户端接入与工作区定位](#13)（项目根解析不依赖 cwd）、[工作区数据模型](#14)（.coolteach 结构）、[课程内容格式](#15)（lessons Markdown + frontmatter）、[统一题目/任务标准](#16)（五类任务块 + lint）
-> 状态：**草稿，待讨论**。决议后归档为预览架构规格。
+> 状态：**已决议（2026-08-14）**，见文末「决议」；本文件归档为预览架构规格。
 
 ## 1. 服务形态
 
@@ -65,3 +65,12 @@
 2. **渲染引擎**：markdown-it 纯 CommonMark + 自绘任务组件（推荐，不绑 MDC）？还是 Nuxt Content（MDC 能力，更重）？
 3. **写回策略**：原子写 + last-write-wins（v1，推荐）？还是引入锁/冲突检测？
 4. **页面结构与语言**：照草稿（课程选择器 + 课次侧栏自由切换、中文 UI）？
+
+## 9. 决议（已锁定）
+
+1. **服务形态**：本地 Nuxt 服务、动态读写；`open-preview` 以 `PREVIEW_WORKSPACE` + `PORT`（默认 4737，占用顺延）拉起并打开浏览器；持续运行，再次调用先停旧再启。
+2. **渲染引擎**：markdown-it 纯 CommonMark + gray-matter 解析 frontmatter；` ```task ` 用自定义 renderer 渲染为交互组件（五类题型）；不启用 MDC（课程内容保持任何 Agent 工具可写）。
+3. **写回**：仅服务端写文件；路径 resolve + 前缀校验防穿越；原子写（tmp+rename）；v1 **last-write-wins**（网页 PUT /api 与工具 record-progress 互通同一 progress.json）；预览实时读文件。
+4. **页面**：课程列表 → 课程主页（MISSION 摘要 + 课次进度）→ 单课阅读；全局课程选择器 + 课次侧栏自由切换；上一课/下一课仅作便捷；样式遵循 cool-design（深色默认）。
+5. **语言**：预览 UI 中文；生成内容默认中文（随课程）。
+6. **启动契约（供 MCP 工具面设计）**：`PREVIEW_WORKSPACE` 来自项目根解析（`CLAUDE_PROJECT_DIR` / `--project-root`），`PORT` 可配；服务打印 URL 后由 open-preview 打开。
