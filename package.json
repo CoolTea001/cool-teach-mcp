@@ -1,0 +1,16 @@
+{
+  "name": "cool-teach-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An MCP service that helps you plan your learning tasks (multi-course .coolteach workspace + local web preview)",
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test:e2e": "node test-e2e.mjs",
+    "start": "pnpm --filter @cool-teach/mcp-server start"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0"
+  }
+}

@@ -1,0 +1,34 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+:root {
+  --ui-container: 90rem;
+}
+
+/* 正文排版（决议 #17：统一渲染，cool-design 风格；供课程正文与 Mission 共用） */
+.md-body :deep(h1) { font-size: 1.5rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--ui-text-highlighted); }
+.md-body :deep(h2) { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--ui-text-highlighted); }
+.md-body :deep(h3) { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.4rem; color: var(--ui-text-highlighted); }
+.md-body :deep(p) { margin: 0.6rem 0; line-height: 1.75; color: var(--ui-text-default); }
+.md-body :deep(ul), .md-body :deep(ol) { margin: 0.6rem 0; padding-left: 1.4rem; list-style: revert; }
+.md-body :deep(li) { margin: 0.25rem 0; }
+.md-body :deep(a) { color: var(--ui-text-primary); text-decoration: underline; }
+.md-body :deep(strong) { font-weight: 600; }
+.md-body :deep(code) {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.85em;
+  background: var(--ui-bg-muted);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+}
+.md-body :deep(pre) {
+  background: var(--ui-bg-muted);
+  border: 1px solid var(--ui-border-muted);
+  border-radius: 0.5rem;
+  padding: 0.9rem;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+}
+.md-body :deep(pre code) { background: transparent; padding: 0; font-size: 0.85rem; }
+.md-body :deep(blockquote) { border-left: 3px solid var(--ui-border-accented); padding-left: 0.9rem; color: var(--ui-text-muted); margin: 0.8rem 0; }
+.md-body :deep(img) { max-width: 100%; border-radius: 0.5rem; }
