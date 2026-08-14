@@ -2,7 +2,7 @@
 
 > 工单：[统一题目/任务标准](https://github.com/CoolTea001/cool-teach-mcp/issues/16)
 > 输入决议：[课程内容格式](#15)（任务内联 ` ```task ` fenced block）、[工作区数据模型](#14)（进度扩展点 `lessons.<key>.tasks`）
-> 状态：**草稿，待讨论**。本文件是讨论载体，决议后归档为 task schema 规格。
+> 状态：**已决议（2026-08-14）**，见文末「决议」；本文件归档为 task schema 规格。
 
 ## 1. 任务块（Task Block）
 
@@ -154,3 +154,11 @@
 2. **质量门槛强度**：error 级 = 创建时拒绝（推荐，杜绝“不可用”）？还是降为警告放行？
 3. **每课至少一个任务**：保持 warning（推荐）？还是升为 error？
 4. **字段增删**：`difficulty` / `hint` 要不要？`id` 命名 `0001-task-N` 可以吗？
+
+## 6. 决议（已锁定）
+
+1. **题型五类照本稿**：`choice` / `multi` / `truefalse` / `short` / `steps`。
+2. **强校验**：error 级规则（必填缺失、`id` 重复、`options` 不等长、`answer` 无效）在创建/更新课程内容时**拒绝**并给出逐条修正提示；warning 级（每课至少一个任务）提示不阻断。
+3. **校验共用**：同一套 lint 由 MCP 工具与预览端共用；预览遇坏块显示明确错误。
+4. **字段照本稿**：`id`（`0001-task-N`，课程内唯一）+ `type` + `question` + `explain`（必填，`steps` 每步含 `check`）+ `difficulty` / `hint`（可选）。
+5. **任务级进度**：完成后写回 `progress.json` 的 `lessons.<key>.tasks.<id> = { completed, completedAt }`（向后兼容扩展）。
