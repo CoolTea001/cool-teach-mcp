@@ -2,7 +2,7 @@
 
 > 工单：[工作区数据模型](https://github.com/CoolTea001/cool-teach-mcp/issues/14)
 > 输入决议：[teach 吸收边界](#11)（每课程保留六类产物、课程完全独立）、[技术栈与仓库结构](#12)、[跨客户端接入与工作区定位](#13)（不依赖 cwd）
-> 状态：**草稿，待讨论**。本文件是讨论载体，决议后归档为 schema 规格。
+> 状态：**已决议（2026-08-14）**，见文末「决议」；本文件归档为 `.coolteach` schema 规格。
 
 ## 1. 目录结构
 
@@ -104,3 +104,12 @@
 2. **进度位置**：`progress.json` 放每课程目录内（推荐，自包含）？还是放工作区级？
 3. **manifest 格式**：JSON（推荐，机器可读）？还是 Markdown？
 4. 字段与命名是否有要增删的？（如 `domain` 的取值是否要枚举/自由文本）
+
+## 7. 决议（已锁定）
+
+1. **权威源**：课程元信息以每课程 `course.json` 为权威；`courses.json` 为派生索引，由服务扫描 `courses/*/course.json` 重写，避免漂移。
+2. **进度位置**：`progress.json` 存每课程目录内（课程自包含）；v1 记课级 `completed`（+`completedAt`），任务级待 统一题目/任务标准 扩展（向后兼容）。
+3. **manifest 格式**：JSON（`courses.json`：`version` + `courses[]`）。
+4. **字段**：`domain` 自由文本（领域=“类型”，不建枚举）；`slug` / `title` / `description` / `status`（active|paused|archived）/ `createdAt` / `updatedAt` 照本稿。
+5. **课程结构**：每课程目录 = `course.json` + `MISSION.md` + `NOTES.md` + `GLOSSARY.md` + `RESOURCES.md` + `learning-records/` + `lessons/`（`0001-<slug>.md`）+ `assets/` + `progress.json`；课程完全独立，lesson 编号各课程从 0001 起。
+6. **初始化**：`.coolteach/` 缺失时由 MCP 工具初始化（`mkdir` + 空 `courses.json`）——入口由 MCP 工具面设计 决议。
