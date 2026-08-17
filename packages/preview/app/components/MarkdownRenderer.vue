@@ -8,6 +8,7 @@ const props = defineProps<{
   taskProgress?: Record<string, { completed?: boolean }>;
 }>();
 const emit = defineEmits<{ (e: "task-completed", taskId: string, completed: boolean): void }>();
+const { t } = useI18n();
 
 const md = new MarkdownIt({ html: false, linkify: true, breaks: false });
 
@@ -59,7 +60,7 @@ const renderMd = (src: string): string => md.render(src);
         :initial-completed="taskProgress?.[String(seg.task.id)]?.completed ?? false"
         @completed="(taskId: string, completed: boolean) => emit('task-completed', taskId, completed)"
       />
-      <UAlert v-else color="error" title="任务块无法解析" :description="seg.error ?? '未知错误'" />
+      <UAlert v-else color="error" :title="t('taskParseError')" :description="seg.error ?? t('unknownError')" />
     </template>
   </div>
 </template>

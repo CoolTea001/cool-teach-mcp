@@ -5,8 +5,8 @@ export default defineEventHandler(() => {
   const courses = listCourses().map((c) => ({
     slug: c.slug,
     title: c.title,
-    domain: c.domain,
     status: c.status,
+    description: readCourse(c.slug)?.description,
     ...courseSummary(c.slug),
   }));
   return { initialized: true, courses };

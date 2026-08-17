@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{ courseSlug: string; lessonId: string; completed: boolean }>();
 const emit = defineEmits<{ (e: "changed", completed: boolean): void }>();
+const { t } = useI18n();
 
 const value = ref(props.completed);
 
@@ -21,6 +22,6 @@ async function toggle(): Promise<void> {
     :icon="value ? 'i-lucide-check-circle-2' : 'i-lucide-circle'"
     @click="toggle"
   >
-    {{ value ? "已学完" : "标记已学完" }}
+    {{ value ? t("completed") : t("markCompleted") }}
   </UButton>
 </template>

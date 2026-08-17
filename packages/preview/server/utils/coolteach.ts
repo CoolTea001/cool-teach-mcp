@@ -34,6 +34,7 @@ export interface CourseEntry {
   slug: string;
   title: string;
   status: string;
+  description?: string;
 }
 
 export function listCourses(): CourseEntry[] {

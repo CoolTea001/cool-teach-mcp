@@ -10,7 +10,7 @@ An MCP service that helps you plan your learning tasks — multi-course learning
 
 - **多课程工作区**（`.coolteach/`）：同一项目里并存多门课程，课程完全独立，每课程含 MISSION / NOTES / GLOSSARY / RESOURCES / learning-records / lessons / assets / progress。
 - **统一课程内容标准**：课程为单文件 Markdown（frontmatter: title/summary/tags），任务内联 ` ```task ` JSON 块；五类题型（choice / multi / truefalse / short / steps），创建时 lint 强校验（必填、选项等长反线索、答案有效、explain 反馈闭环），从源头杜绝“不可用”任务。
-- **本地网页预览**：**侧边栏 + 阅读区**布局——侧栏列出课程与当前课程的课次（自由切换），阅读区展示选中的课件；网页可标记“已学”与完成任务并写回 `.coolteach`，与 MCP 工具记录互通（原子写 + last-write-wins）。
+- **本地网页预览**：**侧边栏 + 阅读区**布局——侧栏列出课程与当前课程的课次（自由切换），课程列表以卡片形式展示课程标题与课件数量，阅读区展示选中的课件；滚动区带**边缘淡出阴影**（`useScrollShadow`）提示还有更多内容，滚动条为随主题自适应的细窄圆角样式；阅读区右上角提供**深色/浅色/系统**主题切换与**中文 / English** 语言切换（i18n 覆盖侧栏、课程页与任务交互等界面文案）；网页可标记“已学”与完成任务并写回 `.coolteach`，与 MCP 工具记录互通（原子写 + last-write-wins）。
 - **统一渲染**：预览按 cool-design（Nuxt UI + Tailwind CSS v4，深色默认）渲染课程与任务，课程文件零样式。
 
 ## 目录结构

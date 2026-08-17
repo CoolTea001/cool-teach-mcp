@@ -12,6 +12,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{ (e: "completed", taskId: string, completed: boolean): void }>();
+const { t } = useI18n();
 
 const completed = ref(props.initialCompleted ?? false);
 const graded = ref(false);
@@ -31,26 +32,63 @@ const task = computed(() => props.task as {
   steps?: { text: string; check: string }[];
 });
 
+const typeLabel = computed(() => {
+  const map: Record<string, string> = {
+    choice: t("taskChoice"),
+    multi: t("taskMulti"),
+    truefalse: t("taskTruefalse"),
+    short: t("taskShort"),
+    steps: t("taskSteps"),
+  };
+  return map[task.value.type] ?? task.value.type;
+});
+
 function markComplete(): void {
   if (completed.value) return;
   completed.value = true;
   emit("completed", task.value.id, true);
 }
 
-function isSelected(i: number): boolean {
-  return Array.isArray(selected.value) ? selected.value.includes(i) : selected.value === i;
+function isSelected(i: number | boolean): boolean {
+  return Array.isArray(selected.value) ? selected.value.includes(i as number) : selected.value === i;
 }
 
-function toggleOption(i: number): void {
-  if (task.value.type === "multi") {
-    const arr = Array.isArray(selected.value) ? [...(selected.value as number[])] : [];
-    const idx = arr.indexOf(i);
-    if (idx >= 0) arr.splice(idx, 1);
-    else arr.push(i);
-    selected.value = arr;
-  } else {
-    selected.value = i;
-  }
+/** choice/multi 选项渲染（单选组/复选组共用） */
+const options = computed(() => task.value.options ?? []);
+const choiceItems = computed(() => options.value.map((label, i) => ({ label, value: i })));
+const multiItems = computed(() => options.value.map((label, i) => ({ label, value: i })));
+/** truefalse 二选一（value 为布尔） */
+const truefalseItems = computed(() => [
+  { label: t("correct"), value: true },
+  { label: t("wrong"), value: false },
+]);
+
+/** 该值是否为正确答案 */
+function isCorrectOpt(i: number | boolean): boolean {
+  const a = task.value.answer;
+  return Array.isArray(a) ? (a as number[]).includes(i as number) : a === i;
+}
+
+/** 判分后的选项文本样式：正确项绿、错选红、其余默认 */
+function optTextClass(i: number | boolean): string {
+  if (!graded.value) return "";
+  if (isCorrectOpt(i)) return "text-success";
+  if (isSelected(i)) return "text-error";
+  return "";
+}
+
+function onRadioPick(v: unknown): void {
+  selected.value = typeof v === "number" ? v : null;
+  graded.value = false;
+}
+
+function onCheckPick(v: unknown): void {
+  selected.value = Array.isArray(v) ? (v as number[]) : [];
+  graded.value = false;
+}
+
+function onBoolPick(v: unknown): void {
+  selected.value = typeof v === "boolean" ? v : null;
   graded.value = false;
 }
 
@@ -79,68 +117,118 @@ function toggleStep(i: number): void {
 </script>
 
 <template>
-  <UCard class="border-default">
+  <UCard variant="subtle" class="border-default">
     <template #header>
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <UBadge color="primary" variant="subtle">
-            {{
-              { choice: "单选", multi: "多选", truefalse: "判断", short: "简答", steps: "实操清单" }[task.type] ?? task.type
-            }}
+            {{ typeLabel }}
           </UBadge>
           <span class="text-sm font-medium text-default">{{ task.question }}</span>
         </div>
-        <UBadge v-if="completed" color="success" variant="subtle" icon="i-lucide-check">已完成</UBadge>
+        <UBadge v-if="completed" color="success" variant="subtle" icon="i-lucide-check">{{ t("taskCompleted") }}</UBadge>
       </div>
     </template>
 
-    <!-- choice / multi -->
-    <div v-if="task.type === 'choice' || task.type === 'multi'" class="space-y-2">
-      <UButton
-        v-for="(opt, i) in task.options ?? []"
-        :key="i"
-        block
-        :variant="isSelected(i) ? 'solid' : 'subtle'"
-        :color="graded && isSelected(i) ? (correct ? 'success' : 'error') : 'neutral'"
-        @click="toggleOption(i)"
+    <!-- choice：单选按钮组 -->
+    <div v-if="task.type === 'choice'" class="space-y-2">
+      <URadioGroup
+        :model-value="typeof selected === 'number' ? selected : null"
+        :items="choiceItems"
+        size="lg"
+        class="w-full"
+        @update:model-value="onRadioPick"
       >
-        {{ opt }}
-      </UButton>
-      <UButton class="mt-2" color="primary" :disabled="selected === null || (task.type === 'multi' && Array.isArray(selected) && selected.length === 0)" @click="grade">
-        检查答案
+        <template #label="{ item }">
+          <span class="flex items-center gap-2" :class="optTextClass(item.value as number)">
+            <span>{{ item.label }}</span>
+            <UIcon
+              v-if="graded && isCorrectOpt(item.value as number)"
+              name="i-lucide-circle-check"
+              class="size-4 shrink-0 text-success"
+            />
+            <UIcon
+              v-else-if="graded && isSelected(item.value as number)"
+              name="i-lucide-circle-x"
+              class="size-4 shrink-0 text-error"
+            />
+          </span>
+        </template>
+      </URadioGroup>
+      <UButton class="mt-3" color="primary" :disabled="typeof selected !== 'number'" @click="grade">
+        {{ t("checkAnswer") }}
       </UButton>
     </div>
 
-    <!-- truefalse -->
-    <div v-else-if="task.type === 'truefalse'" class="flex gap-2">
-      <UButton
-        :variant="selected === true ? 'solid' : 'subtle'"
-        :color="graded && selected === true ? (correct ? 'success' : 'error') : 'neutral'"
-        @click="selected = true; graded = false"
+    <!-- multi：复选框组 -->
+    <div v-else-if="task.type === 'multi'" class="space-y-2">
+      <UCheckboxGroup
+        :model-value="Array.isArray(selected) ? selected : []"
+        :items="multiItems"
+        size="lg"
+        class="w-full"
+        @update:model-value="onCheckPick"
       >
-        正确
+        <template #label="{ item }">
+          <span class="flex items-center gap-2" :class="optTextClass(item.value as number)">
+            <span>{{ item.label }}</span>
+            <UIcon
+              v-if="graded && isCorrectOpt(item.value as number)"
+              name="i-lucide-circle-check"
+              class="size-4 shrink-0 text-success"
+            />
+            <UIcon
+              v-else-if="graded && isSelected(item.value as number)"
+              name="i-lucide-circle-x"
+              class="size-4 shrink-0 text-error"
+            />
+          </span>
+        </template>
+      </UCheckboxGroup>
+      <UButton class="mt-3" color="primary" :disabled="!Array.isArray(selected) || selected.length === 0" @click="grade">
+        {{ t("checkAnswer") }}
       </UButton>
-      <UButton
-        :variant="selected === false ? 'solid' : 'subtle'"
-        :color="graded && selected === false ? (correct ? 'success' : 'error') : 'neutral'"
-        @click="selected = false; graded = false"
+    </div>
+
+    <!-- truefalse：单选按钮组（正确 / 错误） -->
+    <div v-else-if="task.type === 'truefalse'" class="space-y-2">
+      <URadioGroup
+        :model-value="typeof selected === 'boolean' ? selected : null"
+        :items="truefalseItems"
+        size="lg"
+        class="w-full"
+        @update:model-value="onBoolPick"
       >
-        错误
-      </UButton>
-      <UButton color="primary" :disabled="selected === null" @click="grade">检查答案</UButton>
+        <template #label="{ item }">
+          <span class="flex items-center gap-2" :class="optTextClass(item.value as boolean)">
+            <span>{{ item.label }}</span>
+            <UIcon
+              v-if="graded && isCorrectOpt(item.value as boolean)"
+              name="i-lucide-circle-check"
+              class="size-4 shrink-0 text-success"
+            />
+            <UIcon
+              v-else-if="graded && isSelected(item.value as boolean)"
+              name="i-lucide-circle-x"
+              class="size-4 shrink-0 text-error"
+            />
+          </span>
+        </template>
+      </URadioGroup>
+      <UButton class="mt-3" color="primary" :disabled="typeof selected !== 'boolean'" @click="grade">{{ t("checkAnswer") }}</UButton>
     </div>
 
     <!-- short -->
     <div v-else-if="task.type === 'short'" class="space-y-3">
-      <UTextarea v-model="shortText" placeholder="写下你的答案…" :rows="3" class="w-full" />
+      <UTextarea v-model="shortText" :placeholder="t('shortPlaceholder')" :rows="3" class="w-full" />
       <div class="flex flex-wrap gap-2">
-        <UButton variant="subtle" @click="shownAnswer = !shownAnswer">
-          {{ shownAnswer ? "收起参考答案" : "查看参考答案" }}
+        <UButton color="primary" @click="shownAnswer = !shownAnswer">
+          {{ shownAnswer ? t("hideReferenceAnswer") : t("showReferenceAnswer") }}
         </UButton>
-        <UButton v-if="shownAnswer" color="success" @click="markComplete">我答对了</UButton>
+        <UButton v-if="shownAnswer" color="success" @click="markComplete">{{ t("iGotIt") }}</UButton>
       </div>
-      <UAlert v-if="shownAnswer" color="info" title="参考答案" :description="task.answer" />
-      <UAlert v-if="shownAnswer && task.rubric" color="warning" title="自评标准" :description="task.rubric" />
+      <UAlert v-if="shownAnswer" variant="subtle" color="info" :title="t('referenceAnswer')" :description="task.answer" />
+      <UAlert v-if="shownAnswer && task.rubric" variant="subtle" color="warning" :title="t('rubric')" :description="task.rubric" />
     </div>
 
     <!-- steps -->
@@ -149,7 +237,7 @@ function toggleStep(i: number): void {
         v-for="(s, i) in task.steps ?? []"
         :key="i"
         :model-value="checkedSteps.has(i)"
-        :label="`${s.text}（完成标准：${s.check}）`"
+        :label="t('stepLabel', s.text, s.check)"
         @update:model-value="toggleStep(i)"
       />
     </div>
@@ -157,8 +245,9 @@ function toggleStep(i: number): void {
     <!-- 反馈（反馈闭环，决议 #16） -->
     <UAlert
       v-if="task.explain && (graded || (task.type === 'steps' && checkedSteps.size === (task.steps?.length ?? -1)))"
+      variant="subtle"
       :color="task.type === 'steps' || correct ? 'success' : 'error'"
-      :title="task.type === 'steps' ? '全部完成' : correct ? '回答正确' : '回答错误'"
+      :title="task.type === 'steps' ? t('allDone') : correct ? t('answerCorrect') : t('answerWrong')"
       :description="task.explain"
       class="mt-3"
     />
